@@ -1,0 +1,26 @@
+# secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Data files
+data/raw/*
+data/mock/*
+*.csv
+*.parquet
+
+# Streamlit
+.streamlit/
+
+# OS
+.DS_Store
+Thumbs.db
