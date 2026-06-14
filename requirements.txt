@@ -1,23 +1,22 @@
 # Core
-psycopg2-binary==2.9.9
-sqlalchemy==2.0.30
-pandas==2.2.2
-python-dotenv==1.0.1
-numpy==1.26.4
+psycopg2-binary==2.9.12
+sqlalchemy==2.0.50
+pandas==3.0.3
+python-dotenv==1.2.2
+numpy==2.4.6
 
 # Dashboard
-streamlit==1.35.0
-plotly==5.22.0
-altair==5.3.0
+streamlit==1.58.0
+plotly==6.8.0
+altair==6.2.1
 
 # Ingestion / HTTP
-requests==2.32.3
-beautifulsoup4==4.12.3
-fake-useragent==1.5.1
+requests==2.34.2
+beautifulsoup4==4.15.0
 user-agents==2.2.0
 
 # Utilities
-tqdm==4.66.4
-click==8.1.7
-python-dateutil==2.9.0
-Faker==25.0.0
+tqdm==4.68.2
+click==8.4.1
+python-dateutil==2.9.0.post0
+Faker==40.23.0
