@@ -1,5 +1,14 @@
 # Changelog
 
+## Day 7 - Week 1 Review
+- Verified all 15 packages with setup_check.py
+- Confirmed dim_dates has 1,096 rows (2023-01-01 to 2025-12-31)
+- Refreshed all 4 mock data CSVs (1,000 + 2,000 + 50 + 5,000 rows)
+- Added Project Architecture ASCII diagram to README
+- Added full type hints to utils/helpers.py
+- Created tests/test_helpers.py with 9 unit tests
+- All 9 tests passing (pytest)
+
 ## Day 6 - Mock Data Generators
 - gen_ga4.py: 1,000 rows of GA4 session data
 - gen_server_logs.py: 2,000 rows of server logs
