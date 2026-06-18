@@ -1,5 +1,12 @@
 # Changelog
 
+## Day 9 - Server Logs Pipeline + GA4 Improvements
+- Improved ga4.py incremental mode with --since flag
+- Built ingestion/server_logs.py pipeline
+- Added verify_server_logs.py
+- All unit tests passing
+- Updated vw_traffic.sql view
+
 ## Day 8 - GA4 Ingestion Pipeline
 - Built ingestion/ga4.py with full and incremental modes
 - Added error handling and logging
