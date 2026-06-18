@@ -29,6 +29,8 @@ log = logging.getLogger("server_logs_ingestion")
 
 CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "raw" / "server_logs.csv"
 TABLE = "raw_server_logs"
+REQUIRED_COLUMNS = {"log_timestamp", "ip_address", "request_method", "url",
+                    "status_code", "response_size", "user_agent"}
 
 
 def _split_url(url_str: str) -> tuple[str, str | None]:
@@ -51,6 +53,13 @@ def load_csv() -> pd.DataFrame:
         log.error("Failed to read CSV: %s", exc)
         print(f"Error reading CSV: {exc}")
         raise
+
+    # Validate expected columns are present
+    missing = REQUIRED_COLUMNS - set(df.columns)
+    if missing:
+        log.error("CSV is missing required columns: %s", missing)
+        print(f"Error: CSV is missing required columns: {missing}")
+        raise ValueError(f"Missing columns: {missing}")
 
     # Strip whitespace from string columns
     str_cols = df.select_dtypes(include="str").columns.tolist() or \
