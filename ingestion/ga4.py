@@ -3,11 +3,12 @@ GA4 CSV ingestion pipeline: data/raw/ga4_sessions.csv -> raw_ga4_sessions
 
 Usage:
     python ingestion/ga4.py --mode full
-    python ingestion/ga4.py --mode incremental
+    python ingestion/ga4.py --mode incremental --since 2024-01-01
 """
 import argparse
 import logging
 import sys
+from datetime import date
 from pathlib import Path
 
 import pandas as pd
@@ -76,27 +77,34 @@ def _existing_dates(engine) -> set:
         return {r[0] for r in rows}
 
 
-def ingest(mode: str) -> int:
+def ingest(mode: str, since: date | None = None) -> int:
     try:
         engine = get_engine()
-        # Verify connection is alive
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
         log.info("Database connection established")
     except Exception as exc:
         log.error("Cannot connect to database: %s", exc)
-        print(f"Error: Cannot connect to database — {exc}")
+        print(f"Error: Cannot connect to database - {exc}")
         raise
 
     df = load_csv()
 
     try:
         if mode == "incremental":
+            if since is not None:
+                # Filter CSV rows to only those on or after the since date
+                df = df[df["session_date"] >= since]
+                log.info("Since filter applied: %d rows from %s onward", len(df), since)
+
+            # Also skip dates already in the database
             existing = _existing_dates(engine)
             df = df[~df["session_date"].isin(existing)]
-            log.info("Incremental mode: %d new rows to insert", len(df))
+            log.info("After dedup: %d new rows to insert", len(df))
+
             if df.empty:
-                print("No new dates to insert.")
+                since_str = str(since) if since else "existing dates"
+                print(f"No new rows to insert since {since_str}.")
                 return 0
 
         with engine.begin() as conn:
@@ -112,8 +120,12 @@ def ingest(mode: str) -> int:
         raise
 
     count = len(df)
-    log.info("Inserted %d rows into %s", count, TABLE)
-    print(f"Inserted {count} rows into {TABLE}")
+    if mode == "incremental" and since is not None:
+        log.info("Incremental load: inserted %d rows since %s", count, since)
+        print(f"Incremental load: inserted {count} rows since {since}")
+    else:
+        log.info("Inserted %d rows into %s", count, TABLE)
+        print(f"Inserted {count} rows into {TABLE}")
     return count
 
 
@@ -121,9 +133,12 @@ def main():
     parser = argparse.ArgumentParser(description="Ingest GA4 CSV into raw_ga4_sessions")
     parser.add_argument("--mode", choices=["full", "incremental"], default="full",
                         help="full: truncate and reload; incremental: only insert new dates")
+    parser.add_argument("--since", default=None, metavar="YYYY-MM-DD",
+                        help="Start date for incremental load (e.g. 2024-01-01)")
     args = parser.parse_args()
+    since = date.fromisoformat(args.since) if args.since else None
     try:
-        ingest(args.mode)
+        ingest(args.mode, since)
     except Exception:
         sys.exit(1)
 
