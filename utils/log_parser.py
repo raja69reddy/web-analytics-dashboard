@@ -108,3 +108,7 @@ def extract_page_from_url(url: str) -> str:
         return "/"
     parsed = urlparse(str(url))
     return parsed.path or "/"
+
+
+# ── module-level type alias used by callers ────────────────────────────────
+StatusCategory = str   # '2xx Success' | '3xx Redirect' | '4xx Client Error' | '5xx Server Error' | 'Unknown'
