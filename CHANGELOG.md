@@ -1,5 +1,17 @@
 # Changelog
 
+## Day 12 - SQL Views for Sessions by Channel
+- Updated vw_traffic.sql with sessions by channel view (JOIN with dim_dates fallback)
+- Created vw_daily_traffic.sql with 7-day rolling average
+- Created vw_channel_performance.sql with channel share percentages
+- Created vw_new_vs_returning.sql with new vs returning breakdown by date
+- Created vw_device_breakdown.sql with device share and bounce rate
+- Created vw_geo_performance.sql with top 10 countries by sessions
+- Created sql/queries/traffic_summary.sql with 4 analysis queries
+- Created utils/query_runner.py with run_query and run_query_string helpers
+- Created tests/test_views.py with 24 view tests
+- All 88 tests passing
+
 ## Day 11 - Clickstream + Scrape Pipelines
 - Built ingestion/clickstream.py with full and incremental modes
 - Built ingestion/scraper.py with upsert support
