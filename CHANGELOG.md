@@ -1,5 +1,15 @@
 # Changelog
 
+## Day 15 - Mock Data Enhanced + Dashboard Started
+- Updated gen_clickstream.py with 10,000 rows and new columns (session_duration, device_type, browser, referrer_url)
+- Updated gen_scrape.py with 100 rows and new columns (page_type, load_time_ms, internal_links, external_links)
+- Created dashboard/app.py main entry point with sidebar, global filters, project stats
+- Created dashboard/components/filters.py with get_date_filter, get_channel_filter, get_page_filter, get_device_filter, apply_filters
+- Created dashboard/components/metrics.py with KPI card helpers and format functions
+- Created dashboard/components/charts.py with line, bar, pie, funnel, scatter chart wrappers
+- Created dashboard/pages/1_traffic.py with 5 KPI cards and session charts
+- Streamlit app verified running on localhost:8501
+
 ## Day 14 - Week 2 Review
 - Ran all 4 ingestion pipelines end to end (2,000 + 5,000 + 5,000 + 50 rows)
 - Created ingestion/run_all.py orchestration script with formatted summary table
