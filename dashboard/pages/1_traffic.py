@@ -43,6 +43,7 @@ df_daily    = run_view("vw_daily_traffic")
 df_channels = run_view("vw_channel_performance")
 df_devices  = run_view("vw_device_breakdown")
 df_newret   = run_view("vw_new_vs_returning")
+df_geo      = run_view("vw_geo_performance")
 
 # Debug: verify each view returned rows
 with st.expander("Debug: data shapes", expanded=False):
@@ -52,6 +53,7 @@ with st.expander("Debug: data shapes", expanded=False):
         "vw_channel_performance": df_channels.shape,
         "vw_device_breakdown":    df_devices.shape,
         "vw_new_vs_returning":    df_newret.shape,
+        "vw_geo_performance":     df_geo.shape,
     })
 
 # Apply date / channel filters
@@ -182,3 +184,26 @@ if not df_devices.empty:
         st.plotly_chart(fig_dev_bounce, use_container_width=True)
 else:
     st.info("No device breakdown data available.")
+
+st.divider()
+
+# ── Geographic performance ────────────────────────────────────────────────────
+st.subheader("Geographic Performance")
+if not df_geo.empty:
+    col_geo1, col_geo2 = st.columns(2)
+    with col_geo1:
+        st.dataframe(
+            df_geo[["country", "total_sessions", "country_share_pct", "bounce_rate_pct"]],
+            use_container_width=True,
+        )
+    with col_geo2:
+        df_geo_sorted = df_geo.sort_values("total_sessions", ascending=True)
+        fig_geo = bar_chart(
+            df_geo_sorted, x="total_sessions", y="country",
+            title="Top Countries by Sessions",
+            orientation="h",
+            labels={"country": "Country", "total_sessions": "Sessions"},
+        )
+        st.plotly_chart(fig_geo, use_container_width=True)
+else:
+    st.info("No geographic data available.")
