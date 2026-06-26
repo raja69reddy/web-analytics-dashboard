@@ -1,5 +1,21 @@
 # Changelog
 
+## Day 17 - User Behavior Page Complete
+- Created dashboard/pages/2_behavior.py with 10 sections
+- Added 4 KPI cards: total page views, avg time on page, avg scroll depth, total events
+- Added top pages table with inline URL search and red highlight for slow pages (>1000ms)
+- Added conversion funnel visualization: Homepage → Product → Cart → Checkout → Purchase
+- Added scroll depth histogram with color-coded buckets (red=low → green=high)
+- Added engagement events breakdown bar chart with percentage labels
+- Added session duration distribution histogram (0-30s to 10m+)
+- Added engagement score bar chart (top 10 pages, Viridis color gradient)
+- Added page views over time line chart with optional URL filter
+- Added traffic heatmap by day of week × hour using Plotly Heatmap
+- Added @st.cache_data(ttl=300) on all 8 query loaders
+- Added st.spinner and try/except with friendly error message
+- Added tests/test_behavior_page.py with 16 tests
+- All 124 tests passing across 10 test files
+
 ## Day 16 - Traffic & Sessions Dashboard Page
 - Updated dashboard/pages/1_traffic.py with real PostgreSQL data from all 6 traffic views
 - Added debug data shapes expander showing row counts for each view
