@@ -70,3 +70,28 @@ display_kpi_row([
 ])
 
 st.divider()
+
+# ── Top pages table ────────────────────────────────────────────────────────────
+st.subheader("Top Pages")
+search = st.text_input("Filter by URL", placeholder="/blog/", key="top_pages_search")
+
+if not df_top_pages.empty:
+    df_tp = df_top_pages[["url", "total_requests", "avg_response_time_ms", "error_rate_pct"]].copy()
+    df_tp = df_tp.sort_values("total_requests", ascending=False)
+    if search:
+        df_tp = df_tp[df_tp["url"].str.contains(search, case=False, na=False)]
+
+    def _highlight_slow(row):
+        bg = "background-color: #ffd6d6" if row["avg_response_time_ms"] > 1000 else ""
+        return [bg] * len(row)
+
+    st.dataframe(
+        df_tp.style.apply(_highlight_slow, axis=1),
+        use_container_width=True,
+        hide_index=True,
+    )
+    st.caption("Rows highlighted in red have avg response time > 1,000 ms")
+else:
+    st.info("No page data available.")
+
+st.divider()
