@@ -220,3 +220,32 @@ else:
     st.info("No engagement event data available.")
 
 st.divider()
+
+# ── Session duration distribution ─────────────────────────────────────────────
+st.subheader("Session Duration Distribution")
+_dur_sql = """
+SELECT
+    COUNT(CASE WHEN session_duration_s < 30                           THEN 1 END) AS "0–30s",
+    COUNT(CASE WHEN session_duration_s >= 30  AND session_duration_s < 120  THEN 1 END) AS "30s–2m",
+    COUNT(CASE WHEN session_duration_s >= 120 AND session_duration_s < 300  THEN 1 END) AS "2m–5m",
+    COUNT(CASE WHEN session_duration_s >= 300 AND session_duration_s < 600  THEN 1 END) AS "5m–10m",
+    COUNT(CASE WHEN session_duration_s >= 600                         THEN 1 END) AS "10m+"
+FROM raw_ga4_sessions
+WHERE session_duration_s IS NOT NULL
+"""
+df_dur = query_df(_dur_sql)
+if not df_dur.empty:
+    import pandas as pd
+    dur_labels = ["0–30s", "30s–2m", "2m–5m", "5m–10m", "10m+"]
+    dur_values = [int(df_dur[col].iloc[0]) for col in dur_labels]
+    df_dur_plot = pd.DataFrame({"Bucket": dur_labels, "Sessions": dur_values})
+    fig_dur = bar_chart(
+        df_dur_plot, x="Bucket", y="Sessions",
+        title="Session Duration Distribution",
+        labels={"Bucket": "Duration", "Sessions": "Sessions"},
+    )
+    st.plotly_chart(fig_dur, use_container_width=True)
+else:
+    st.info("No session duration data available.")
+
+st.divider()
