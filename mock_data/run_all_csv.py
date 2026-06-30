@@ -24,12 +24,14 @@ def run_all():
         ("clickstream_events.csv",  lambda: click_csv(n=5000),  CLICK_OUT),
     ]
 
+    total = 0
     for fname, gen_fn, out_path in jobs:
         df = gen_fn()
         df.to_csv(out_path, index=False)
         print(f"  {fname:<30} {len(df):>6,} rows")
+        total += len(df)
 
-    print("\nAll 4 CSVs generated in data/raw/")
+    print(f"\nAll 4 CSVs generated in data/raw/  (total {total:,} rows)")
 
 
 if __name__ == "__main__":
