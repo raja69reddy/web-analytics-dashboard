@@ -6,7 +6,7 @@ A production-grade analytics platform built with Python, PostgreSQL, and Streaml
 | Feature | Description | Status |
 |---------|-------------|--------|
 | Anomaly Detection | Auto-detect traffic spikes and drops using ML | ✅ Complete |
-| Natural Language Query | Ask questions in plain English, get SQL results | 🔄 In Progress |
+| Natural Language Query | Ask questions in plain English, get SQL results | ✅ Complete |
 | AI Report Generation | Auto-generate insights summaries using LLM | 🔄 In Progress |
 | Predictive Analytics | Forecast traffic and conversions 30 days ahead | 📅 Planned |
 | Smart Alerts | AI-powered alerts for KPI threshold breaches | 📅 Planned |
