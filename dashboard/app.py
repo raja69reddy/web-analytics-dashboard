@@ -93,6 +93,38 @@ with st.sidebar:
 
     st.divider()
 
+    # ── Ask a Question (NLQ) ──────────────────────────────────────────────────
+    st.subheader("💬 Ask a Question")
+    nlq_question = st.text_input(
+        "Ask your data anything:",
+        placeholder='e.g. "Top 5 channels by sessions"',
+        key="sidebar_nlq_question",
+    )
+    if st.button("Ask AI", key="sidebar_nlq_btn"):
+        if nlq_question.strip():
+            import time as _time
+            _t0 = _time.time()
+            try:
+                from ai.nlq.nlq_engine import NLQEngine
+                _engine = NLQEngine()
+                _result = _engine.ask(nlq_question)
+                if _result["error"]:
+                    st.error(_result["response"])
+                else:
+                    with st.expander("Generated SQL", expanded=False):
+                        st.code(_result["sql"] or "", language="sql")
+                    if _result["data"] is not None and not _result["data"].empty:
+                        st.dataframe(_result["data"], use_container_width=True)
+                    else:
+                        st.info("No results returned.")
+                    st.caption(f"Executed in {_result['execution_time_s']}s")
+            except Exception as _exc:
+                st.error(f"NLQ error: {_exc}")
+        else:
+            st.warning("Please enter a question.")
+
+    st.divider()
+
     st.subheader("Global Filters")
     start_date, end_date = get_date_filter()
     channels   = get_channel_filter()
