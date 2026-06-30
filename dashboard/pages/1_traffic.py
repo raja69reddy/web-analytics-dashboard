@@ -164,11 +164,21 @@ else:
 
 st.divider()
 
-st.subheader("Sessions by Device")
+st.subheader("Device Breakdown")
 if not df_devices.empty:
-    fig_dev = bar_chart(
-        df_devices, x="device_category", y="total_sessions",
-        title="Device Category Breakdown",
-        labels={"device_category": "Device", "total_sessions": "Sessions"},
-    )
-    st.plotly_chart(fig_dev, use_container_width=True)
+    col_dev1, col_dev2 = st.columns(2)
+    with col_dev1:
+        fig_dev_pie = pie_chart(
+            df_devices, names="device_category", values="total_sessions",
+            title="Sessions by Device",
+        )
+        st.plotly_chart(fig_dev_pie, use_container_width=True)
+    with col_dev2:
+        fig_dev_bounce = bar_chart(
+            df_devices, x="device_category", y="avg_bounce_rate",
+            title="Avg Bounce Rate by Device",
+            labels={"device_category": "Device", "avg_bounce_rate": "Bounce Rate (%)"},
+        )
+        st.plotly_chart(fig_dev_bounce, use_container_width=True)
+else:
+    st.info("No device breakdown data available.")
