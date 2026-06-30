@@ -63,12 +63,13 @@ with st.sidebar:
         st.success(f"Filters applied: {active}")
 
 # ── Load data ─────────────────────────────────────────────────────────────────
-df_traffic  = _load_traffic()
-df_daily    = _load_daily()
-df_channels = _load_channels()
-df_devices  = _load_devices()
-df_newret   = _load_newret()
-df_geo      = _load_geo()
+with st.spinner("Loading traffic data from PostgreSQL…"):
+    df_traffic  = _load_traffic()
+    df_daily    = _load_daily()
+    df_channels = _load_channels()
+    df_devices  = _load_devices()
+    df_newret   = _load_newret()
+    df_geo      = _load_geo()
 
 # Debug: verify each view returned rows
 with st.expander("Debug: data shapes", expanded=False):
