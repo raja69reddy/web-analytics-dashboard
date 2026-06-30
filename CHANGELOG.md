@@ -1,5 +1,14 @@
 # Changelog
 
+## Day 20 - Natural Language Query (NLQ)
+- Created ai/nlq/nlq_engine.py with OpenAI integration
+- Created ai/nlq/prompts.py with database schema prompts
+- Created ai/nlq/safety.py SQL safety validation
+- Created ai/nlq/cache.py query caching
+- Added NLQ interface to dashboard sidebar
+- Created Ask Your Data dashboard page
+- All tests passing
+
 ## Day 19 - AI Anomaly Detection
 - Created ai/ folder structure with anomaly_detection, nlq, report_generation, forecasting submodules
 - Built AnomalyDetector class using scikit-learn IsolationForest
