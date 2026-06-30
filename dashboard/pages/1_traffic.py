@@ -8,6 +8,9 @@ import streamlit as st
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
+from ai.anomaly_detection.detector import AnomalyDetector
+from ai.anomaly_detection.train import load_model
+from ai.anomaly_detection.utils import load_traffic_data
 from dashboard.components.charts import bar_chart, line_chart, pie_chart
 from dashboard.components.filters import (
     apply_filters,
@@ -145,6 +148,83 @@ if not df_daily.empty:
     st.plotly_chart(fig, use_container_width=True)
 else:
     st.info("No daily traffic data available for the selected date range.")
+
+st.divider()
+
+# ── AI Anomaly Detection ──────────────────────────────────────────────────────
+st.subheader("🤖 AI Anomaly Detection")
+
+@st.cache_data(ttl=300)
+def _load_anomaly_results():
+    try:
+        model = load_model()
+    except FileNotFoundError:
+        return None, None
+    df_full = load_traffic_data()
+    if df_full.empty:
+        return None, None
+    detector = AnomalyDetector()
+    detector._traffic_model = model
+    annotated = detector.detect_traffic_anomalies(df_full)
+    summary   = detector.get_anomaly_summary(df_full)
+    return annotated, summary
+
+with st.spinner("Running AI anomaly detection…"):
+    df_anomaly, anomaly_summary = _load_anomaly_results()
+
+if df_anomaly is None:
+    st.info("Anomaly model not found. Run `python ai/anomaly_detection/train.py` to train it.")
+else:
+    anomaly_rows = df_anomaly[df_anomaly["is_anomaly"]]
+
+    # Sessions chart with anomaly overlay
+    if not df_daily.empty and not anomaly_rows.empty:
+        fig_a = line_chart(
+            df_daily, x="session_date",
+            y=["total_sessions", "sessions_7day_avg"],
+            title="Sessions Over Time with Anomaly Markers",
+            labels={"value": "Sessions", "session_date": "Date", "variable": "Metric"},
+        )
+        fig_a.update_traces(selector={"name": "sessions_7day_avg"}, line={"dash": "dot", "width": 2})
+        # Red dots on anomaly dates
+        anomaly_dates_set = set(anomaly_rows["session_date"].astype(str))
+        anom_daily = df_daily[df_daily["session_date"].astype(str).isin(anomaly_dates_set)]
+        if not anom_daily.empty:
+            fig_a.add_scatter(
+                x=anom_daily["session_date"],
+                y=anom_daily["total_sessions"],
+                mode="markers",
+                marker={"color": "red", "size": 12, "symbol": "circle"},
+                name="Anomaly",
+            )
+        st.plotly_chart(fig_a, use_container_width=True)
+    elif not df_daily.empty:
+        fig_a = line_chart(
+            df_daily, x="session_date",
+            y=["total_sessions", "sessions_7day_avg"],
+            title="Sessions Over Time (no anomalies detected)",
+            labels={"value": "Sessions", "session_date": "Date", "variable": "Metric"},
+        )
+        st.plotly_chart(fig_a, use_container_width=True)
+
+    # Severity badges
+    col_h, col_m, col_l = st.columns(3)
+    col_h.metric("🔴 High Severity",   anomaly_summary.severity_counts.get("high", 0))
+    col_m.metric("🟡 Medium Severity", anomaly_summary.severity_counts.get("medium", 0))
+    col_l.metric("🟢 Low Severity",    anomaly_summary.severity_counts.get("low", 0))
+
+    # Anomaly summary table
+    if not anomaly_rows.empty:
+        display_cols = [c for c in ["session_date", "total_sessions", "avg_bounce_rate",
+                                    "anomaly_score", "severity"] if c in anomaly_rows.columns]
+        st.dataframe(
+            anomaly_rows[display_cols].sort_values("anomaly_score", ascending=False),
+            use_container_width=True,
+        )
+    else:
+        st.success("No anomalies detected in the current traffic data.")
+
+st.divider()
 
 st.subheader("Traffic by Channel")
 col_left, col_right = st.columns(2)
