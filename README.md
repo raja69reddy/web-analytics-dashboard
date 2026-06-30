@@ -29,6 +29,14 @@ A solo-use, full-stack web analytics project built with PostgreSQL + Python + St
 - Filled dim_dates table with dates from 2023 to 2025
 - Verified all rows inserted successfully into PostgreSQL
 
+✅ **Day 5 — Environment Verified + SQL Views + Queries**
+- Created setup_check.py for environment verification
+- Added docstrings to all utils functions
+- Created 4 SQL views: traffic, behavior, conversions, SEO
+- Created 3 reusable SQL queries
+- Added CHANGELOG.md
+- Added detailed comments to schema.sql
+
 ## Stack
 
 | Layer | Tool |
