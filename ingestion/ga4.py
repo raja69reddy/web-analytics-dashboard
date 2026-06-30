@@ -1,87 +1,89 @@
 """
-Ingest raw_ga4_sessions → fct_sessions + dim_pages + dim_dates.
+GA4 CSV ingestion pipeline: data/raw/ga4_sessions.csv -> raw_ga4_sessions
 
 Usage:
     python ingestion/ga4.py --mode full
-    python ingestion/ga4.py --mode incremental --since 2024-01-01
+    python ingestion/ga4.py --mode incremental
 """
 import argparse
 import os
 import sys
-from datetime import date
+from pathlib import Path
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
+import pandas as pd
 from sqlalchemy import text
 
-from utils.db import get_engine, query_df
-from utils.helpers import date_to_id, parse_url_parts, populate_dim_dates
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from utils.db import get_engine
+
+CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "raw" / "ga4_sessions.csv"
+TABLE = "raw_ga4_sessions"
 
 
-def _upsert_pages(urls: list[str]) -> None:
+def load_csv() -> pd.DataFrame:
+    df = pd.read_csv(CSV_PATH)
+
+    # Strip whitespace from string columns
+    for col in df.select_dtypes(include="object").columns:
+        df[col] = df[col].str.strip()
+
+    # Convert session_date to proper DATE
+    df["session_date"] = pd.to_datetime(df["session_date"]).dt.date
+
+    # Fill nulls with 0 for numeric columns
+    num_cols = df.select_dtypes(include="number").columns
+    df[num_cols] = df[num_cols].fillna(0)
+
+    # Map CSV columns to DB column names
+    df = df.rename(columns={
+        "channel": "channel_grouping",
+        "avg_session_duration": "session_duration_s",
+    })
+
+    # Derive boolean bounce from bounce_rate float
+    df["bounce"] = df["bounce_rate"] > 0.5
+
+    # Drop columns with no matching DB column
+    df = df.drop(columns=["bounce_rate", "users"], errors="ignore")
+
+    return df
+
+
+def _existing_dates(engine) -> set:
+    with engine.connect() as conn:
+        rows = conn.execute(text(f"SELECT DISTINCT session_date FROM {TABLE}"))
+        return {r[0] for r in rows}
+
+
+def ingest(mode: str) -> int:
     engine = get_engine()
-    with engine.begin() as conn:
-        for url in set(urls):
-            parts = parse_url_parts(url)
-            conn.execute(
-                text("""
-                    INSERT INTO dim_pages (url, url_path, url_domain, page_section, first_seen, last_seen)
-                    VALUES (:url, :url_path, :url_domain, :page_section, CURRENT_DATE, CURRENT_DATE)
-                    ON CONFLICT (url) DO UPDATE SET last_seen = CURRENT_DATE
-                """),
-                {"url": url, **parts},
-            )
+    df = load_csv()
 
-
-def _load_fct_sessions(df, mode: str) -> None:
-    import pandas as pd
-    engine = get_engine()
-
-    # resolve page_ids
-    page_map = query_df("SELECT url, page_id FROM dim_pages")
-    df = df.merge(page_map, left_on="landing_page", right_on="url", how="left")
-
-    df["date_id"]    = df["session_date"].apply(lambda d: date_to_id(d) if hasattr(d, "year") else None)
-    df["is_new_user"] = df["new_users"].astype(bool)
-    df["bounced"]    = df["bounce"].astype(bool)
-
-    cols = [
-        "session_id", "user_pseudo_id", "date_id", "page_id",
-        "channel_grouping", "source", "medium", "campaign",
-        "country", "device_category", "is_new_user",
-        "pageviews", "session_duration_s", "bounced", "conversions", "revenue",
-    ]
-    df_out = df[cols].copy()
+    if mode == "incremental":
+        existing = _existing_dates(engine)
+        df = df[~df["session_date"].isin(existing)]
+        if df.empty:
+            print("No new dates to insert.")
+            return 0
 
     with engine.begin() as conn:
         if mode == "full":
-            conn.execute(text("TRUNCATE fct_sessions RESTART IDENTITY"))
+            conn.execute(text(f"TRUNCATE {TABLE} RESTART IDENTITY"))
 
-    df_out.to_sql("fct_sessions", engine, if_exists="append", index=False, method="multi", chunksize=500)
-    print(f"  Loaded {len(df_out):,} rows into fct_sessions.")
+    df.to_sql(TABLE, engine, if_exists="append", index=False, method="multi", chunksize=500)
 
-
-def run(mode: str, since: date | None = None) -> None:
-    where = "" if mode == "full" else f"WHERE session_date >= '{since}'"
-    df = query_df(f"SELECT * FROM raw_ga4_sessions {where}")
-    if df.empty:
-        print("Nothing to ingest.")
-        return
-
-    dates = df["session_date"].unique()
-    populate_dim_dates(min(dates), max(dates))
-    _upsert_pages(df["landing_page"].dropna().tolist())
-    _load_fct_sessions(df, mode)
-    print("GA4 ingestion complete.")
+    count = len(df)
+    print(f"Inserted {count} rows into {TABLE}")
+    return count
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", choices=["full", "incremental"], default="full")
-    parser.add_argument("--since", default=None, help="YYYY-MM-DD (incremental only)")
+    parser = argparse.ArgumentParser(description="Ingest GA4 CSV into raw_ga4_sessions")
+    parser.add_argument("--mode", choices=["full", "incremental"], default="full",
+                        help="full: truncate and reload; incremental: only insert new dates")
     args = parser.parse_args()
-    since = date.fromisoformat(args.since) if args.since else None
-    run(args.mode, since)
+    ingest(args.mode)
 
 
 if __name__ == "__main__":
