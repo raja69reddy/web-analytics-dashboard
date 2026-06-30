@@ -1,5 +1,16 @@
 # Changelog
 
+## Day 21 - AI Report Generation + End-to-End Test
+- Full pipeline test successful end to end
+- All SQL views verified returning correct data
+- Full test suite passing
+- Created ai/report_generation/generator.py
+- Created ai/report_generation/prompts.py
+- Created ai/report_generation/formatter.py
+- Created run_report.py pipeline script
+- Created dashboard/pages/6_reports.py
+- All tests passing
+
 ## Day 20 - Natural Language Query (NLQ)
 - Created ai/nlq/nlq_engine.py with OpenAI integration
 - Created ai/nlq/prompts.py with database schema prompts
