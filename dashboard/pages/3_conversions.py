@@ -41,13 +41,18 @@ with st.sidebar:
     if channels:
         st.success(f"Channel filter: {len(channels)} selected")
 
-# ── Load data ─────────────────────────────────────────────────────────────────
-df_conv  = _load_conversions()
-df_funnel = _load_funnel()
-
 # Apply date and channel filters to vw_conversions
 from dashboard.components.filters import apply_filters  # noqa: E402
 import pandas as pd                                     # noqa: E402
+
+# ── Load data ─────────────────────────────────────────────────────────────────
+with st.spinner("Loading conversion data…"):
+    try:
+        df_conv  = _load_conversions()
+        df_funnel = _load_funnel()
+    except Exception as exc:
+        st.error(f"Failed to load data from the database: {exc}")
+        st.stop()
 
 df_conv = apply_filters(df_conv, start_date, end_date, channels)
 
