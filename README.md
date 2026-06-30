@@ -95,6 +95,16 @@ A solo-use, full-stack web analytics project built with PostgreSQL + Python + St
 - Created tests/test_views.py: 24 view tests covering existence, columns, data quality
 - All 88 tests passing (pytest)
 
+✅ **Day 13 — Page Behavior SQL Views**
+- Created 7 SQL views: top pages, page performance,
+  error pages, traffic by hour, user agents,
+  scroll depth, engagement events
+- Added page_analysis.sql with 5 analysis queries
+- Added weekly_report.sql for weekly summaries
+- Updated query_runner.py with 3 new helper functions
+- All views tested and returning correct data
+- All unit tests passing with pytest
+
 ## Project Architecture
 
 ```
