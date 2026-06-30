@@ -12,9 +12,9 @@ from utils.db import query_df
 
 # Table config: (table_name, date_column, pk_columns_for_dup_check)
 RAW_TABLES = [
-    ("raw_ga4_sessions",       "session_date", ["session_id"]),
-    ("raw_server_logs",        "log_time",     ["log_time", "ip_address", "url"]),
-    ("raw_clickstream_events", "event_time",   ["session_id", "event_time", "event_name"]),
+    ("raw_ga4_sessions",       "session_date", ["id"]),
+    ("raw_server_logs",        "log_time",     ["id"]),
+    ("raw_clickstream_events", "event_time",   ["id"]),
     ("raw_scrape_pages",       "scraped_at",   ["url"]),
 ]
 
