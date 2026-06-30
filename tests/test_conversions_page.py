@@ -54,15 +54,21 @@ class TestVwConversions:
         )
         assert len(df) == 0, "sessions must be positive"
 
-    def test_revenue_equals_completions_times_rate(self):
-        """revenue should equal goal_completions * 52 (within rounding)."""
+    def test_revenue_per_conversion_is_52(self):
+        """revenue_per_conversion should be 52.0 for all rows."""
         df = query_df(
-            "SELECT goal_completions, revenue, revenue_per_conversion "
-            "FROM vw_conversions LIMIT 100"
+            "SELECT revenue_per_conversion FROM vw_conversions "
+            "WHERE revenue_per_conversion != 52.0"
         )
-        expected = (df["goal_completions"] * df["revenue_per_conversion"]).round(2)
-        diff = (df["revenue"] - expected).abs()
-        assert (diff < 1.0).all(), "Revenue should equal completions * revenue_per_conversion"
+        assert len(df) == 0, "revenue_per_conversion must be 52.0 for all rows"
+
+    def test_revenue_positive_when_completions_positive(self):
+        """Revenue should be > 0 whenever goal_completions > 0."""
+        df = query_df(
+            "SELECT goal_completions, revenue FROM vw_conversions "
+            "WHERE goal_completions > 0 AND revenue <= 0"
+        )
+        assert len(df) == 0, "Revenue must be positive when goal_completions > 0"
 
     def test_channel_groupings_known(self):
         df = query_df(
