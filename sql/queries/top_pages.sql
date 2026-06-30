@@ -1,11 +1,4 @@
--- top_pages.sql
--- Returns the top pages ranked by total pageviews over a given date range.
--- Parameters (optional — remove WHERE clause to get all-time totals):
---   :start_date  DATE  e.g. '2024-01-01'
---   :end_date    DATE  e.g. '2024-03-31'
---
--- Example usage in Python:
---   query_sql_file('sql/queries/top_pages.sql', {'start_date': '2024-01-01', 'end_date': '2024-03-31'})
+-- top_pages.sql: top 20 pages by pageviews for a given date range (:start_date, :end_date).
 
 SELECT
     p.url,
