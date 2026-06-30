@@ -83,6 +83,18 @@ A solo-use, full-stack web analytics project built with PostgreSQL + Python + St
 - Loaded 50 scraped pages into raw_scrape_pages
 - All 4 ingestion pipelines complete and tested
 
+✅ **Day 12 — SQL Views for Sessions by Channel**
+- Updated vw_traffic.sql: sessions by date/channel/source/medium with dim_dates JOIN
+- Created vw_daily_traffic.sql: daily totals with 7-day rolling average
+- Created vw_channel_performance.sql: channel breakdown with share percentages
+- Created vw_new_vs_returning.sql: new vs returning user sessions by date
+- Created vw_device_breakdown.sql: sessions by device with bounce rate and share pct
+- Created vw_geo_performance.sql: top 10 countries by sessions
+- Created sql/queries/traffic_summary.sql: 4 reusable traffic analysis queries
+- Created utils/query_runner.py: run_query and run_query_string helpers with timing
+- Created tests/test_views.py: 24 view tests covering existence, columns, data quality
+- All 88 tests passing (pytest)
+
 ## Project Architecture
 
 ```
