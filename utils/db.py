@@ -65,3 +65,16 @@ def query_sql_file(path: str, params: dict | None = None):
     with open(path, "r", encoding="utf-8") as f:
         sql = f.read()
     return query_df(sql, params)
+
+
+def test_connection() -> None:
+    try:
+        with get_engine().connect() as conn:
+            conn.execute(text("SELECT 1"))
+        print("Connection successful!")
+    except Exception as e:
+        print(f"Connection failed: {e}")
+
+
+if __name__ == "__main__":
+    test_connection()
