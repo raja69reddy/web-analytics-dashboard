@@ -1,4 +1,4 @@
-"""Generate mock web server log entries → raw_server_logs."""
+"""Generate mock web server log entries — CSV export or direct DB load."""
 import argparse
 import os
 import random
@@ -11,6 +11,31 @@ from faker import Faker
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from utils.db import get_engine
+
+CSV_OUT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "data", "raw", "server_logs.csv"))
+
+CSV_URLS = ["/home", "/about", "/products", "/contact", "/blog"]
+CSV_STATUS_WEIGHTS = [200] * 80 + [301] * 5 + [404] * 12 + [500] * 3
+
+
+def generate_csv(n: int = 2000, days: int = 90) -> pd.DataFrame:
+    """Generate n simplified server log rows for CSV export."""
+    end = datetime.now(tz=timezone.utc)
+    start = end - timedelta(days=days)
+    rows = []
+    for _ in range(n):
+        ts = start + timedelta(seconds=random.randint(0, days * 86400))
+        status = random.choice(CSV_STATUS_WEIGHTS)
+        rows.append({
+            "log_timestamp":  ts.strftime("%Y-%m-%d %H:%M:%S"),
+            "ip_address":     fake.ipv4_public(),
+            "request_method": random.choices(["GET", "POST"], weights=[85, 15])[0],
+            "url":            random.choice(CSV_URLS),
+            "status_code":    status,
+            "response_size":  random.randint(512, 80000) if status == 200 else random.randint(100, 2000),
+            "user_agent":     fake.user_agent(),
+        })
+    return pd.DataFrame(rows).sort_values("log_timestamp").reset_index(drop=True)
 
 fake = Faker()
 
@@ -69,12 +94,20 @@ def load(df: pd.DataFrame, mode: str = "full") -> None:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", choices=["full", "incremental"], default="full")
+    parser.add_argument("--mode", choices=["csv", "full", "incremental"], default="csv")
     parser.add_argument("--days", type=int, default=90)
+    parser.add_argument("--rows", type=int, default=2000)
     parser.add_argument("--requests-per-hour", type=int, default=150)
     args = parser.parse_args()
-    df = generate(days=args.days, requests_per_hour=args.requests_per_hour)
-    load(df, mode=args.mode)
+
+    if args.mode == "csv":
+        df = generate_csv(n=args.rows, days=args.days)
+        os.makedirs(os.path.dirname(CSV_OUT), exist_ok=True)
+        df.to_csv(CSV_OUT, index=False)
+        print(f"Generated {len(df)} rows saved to data/raw/server_logs.csv")
+    else:
+        df = generate(days=args.days, requests_per_hour=args.requests_per_hour)
+        load(df, mode=args.mode)
 
 
 if __name__ == "__main__":
