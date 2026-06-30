@@ -164,16 +164,40 @@ class NLQEngine:
 
         except EnvironmentError as exc:
             result["error"] = str(exc)
-            result["response"] = f"Configuration error: {exc}"
+            result["response"] = (
+                f"Configuration error: {exc}\n"
+                "Tip: add OPENAI_API_KEY=<your-key> to your .env file."
+            )
         except ValueError as exc:
             result["error"] = str(exc)
-            result["response"] = f"Safety error: {exc}"
+            result["response"] = (
+                f"Safety error: {exc}\n"
+                "Only SELECT queries are allowed. Try rephrasing your question."
+            )
         except RuntimeError as exc:
             result["error"] = str(exc)
-            result["response"] = f"API error: {exc}"
+            # Surface cached results if the API call failed mid-flight
+            cached = self.cache.get_cached_query(question)
+            if cached:
+                result["sql"] = cached["sql"]
+                result["data"] = cached["result"]
+                result["from_cache"] = True
+                result["response"] = self.format_response(cached["result"], question)
+                result["error"] = None
+            else:
+                result["response"] = f"API error: {exc}\nNo cached result available for fallback."
         except Exception as exc:
-            result["error"] = str(exc)
-            result["response"] = f"Unexpected error: {exc}"
+            error_type = type(exc).__name__
+            # Give a friendlier message for common DB connectivity errors
+            if "connection" in str(exc).lower() or "psycopg2" in error_type.lower():
+                result["error"] = str(exc)
+                result["response"] = (
+                    "Database connection error — check that PostgreSQL is running "
+                    "and your .env credentials are correct."
+                )
+            else:
+                result["error"] = str(exc)
+                result["response"] = f"Unexpected error ({error_type}): {exc}"
 
         result["execution_time_s"] = round(time.time() - start, 3)
         return result
