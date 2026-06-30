@@ -1,3 +1,4 @@
+-- vw_traffic: sessions, pageviews, bounce rate, and revenue grouped by date and channel.
 CREATE OR REPLACE VIEW vw_traffic AS
 SELECT
     d.full_date,
