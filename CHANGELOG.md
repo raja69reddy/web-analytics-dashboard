@@ -1,5 +1,22 @@
 # Changelog
 
+## Day 18 - Conversion Tracking Dashboard Page
+- Created sql/views/vw_conversions.sql with synthetic CVR by channel (Email 6.5% → Social 1.8%) and $52 avg revenue
+- Created sql/views/vw_funnel.sql with 5 monotone-decreasing stages from raw_ga4_sessions
+- Created dashboard/pages/3_conversions.py with 9 sections
+- Added 4 KPI cards: overall CVR%, total goal completions, total revenue, avg revenue/session
+- Added CVR over time bar chart with green/red coloring vs 3.5% target + 7-day rolling average + dashed target line
+- Added goal completions by source/medium grouped bar chart (top 15)
+- Added revenue by channel horizontal bar chart with dollar labels outside
+- Added funnel drop-off waterfall chart (green=continuing, red=drop-off) using go.Waterfall
+- Added conversion funnel visualization with go.Funnel, biggest drop-off stage highlighted in red
+- Added channel contribution table (sessions, conversions, CVR%, revenue) with CSV download
+- Added conversion trend by day of week bar chart with best day highlighted in green
+- Added @st.cache_data(ttl=300) on both query loaders + sidebar cache clear button
+- Added st.spinner and try/except with st.stop for DB error handling
+- Added tests/test_conversions_page.py with 17 tests (9 for vw_conversions, 8 for vw_funnel)
+- All 141 tests passing across 8 test files
+
 ## Day 17 - User Behavior Page Complete
 - Created dashboard/pages/2_behavior.py with 10 sections
 - Added 4 KPI cards: total page views, avg time on page, avg scroll depth, total events
