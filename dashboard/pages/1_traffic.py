@@ -63,13 +63,20 @@ with st.sidebar:
         st.success(f"Filters applied: {active}")
 
 # ── Load data ─────────────────────────────────────────────────────────────────
-with st.spinner("Loading traffic data from PostgreSQL…"):
-    df_traffic  = _load_traffic()
-    df_daily    = _load_daily()
-    df_channels = _load_channels()
-    df_devices  = _load_devices()
-    df_newret   = _load_newret()
-    df_geo      = _load_geo()
+try:
+    with st.spinner("Loading traffic data from PostgreSQL…"):
+        df_traffic  = _load_traffic()
+        df_daily    = _load_daily()
+        df_channels = _load_channels()
+        df_devices  = _load_devices()
+        df_newret   = _load_newret()
+        df_geo      = _load_geo()
+except Exception as exc:
+    st.error(
+        f"Could not load data from the database. "
+        f"Check your PostgreSQL connection and try again.\n\n**Error:** {exc}"
+    )
+    st.stop()
 
 # Debug: verify each view returned rows
 with st.expander("Debug: data shapes", expanded=False):
