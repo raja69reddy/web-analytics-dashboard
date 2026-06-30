@@ -1,33 +1,28 @@
 # Changelog
 
-All notable changes to this project are documented here.
+## Day 5 - Environment Verified + SQL Views + Queries
+- Verified all Python packages with setup_check.py
+- Added docstrings to utils/helpers.py and utils/db.py
+- Created 4 SQL views: vw_traffic, vw_behavior, vw_conversions, vw_seo
+- Created 3 reusable SQL queries: top_pages, channel_breakdown, daily_sessions
+- Added detailed comments to sql/schema.sql
 
----
+## Day 4 - Helper Functions + dim_dates
+- Created utils/helpers.py with parse_url, get_date_id, clean_user_agent
+- Created sql/populate_dates.py
+- Filled dim_dates with dates from 2023-01-01 to 2025-12-31
 
-## Day 5 — Requirements Verified
-- Installed and verified all packages from requirements.txt
-- Created utils/setup_check.py to confirm all imports succeed
-- Updated requirements.txt to versions compatible with Python 3.14
-
-## Day 4 — Helper Functions + dim_dates
-- Added utils/helpers.py with parse_url, get_date_id, clean_user_agent
-- Created sql/populate_dates.py to fill dim_dates from 2023-01-01 to 2025-12-31
-- Verified 1,096 rows inserted successfully into PostgreSQL
-
-## Day 3 — SQL Schema
+## Day 3 - SQL Schema
 - Wrote all 8 table definitions in sql/schema.sql
 - Applied schema to web_analytics PostgreSQL database
-- Tables: raw_ga4_sessions, raw_server_logs, raw_scrape_pages,
-  raw_clickstream_events, dim_pages, dim_dates, fct_sessions, fct_events
 - Created 4 SQL views: vw_traffic, vw_behavior, vw_conversions, vw_seo
 
-## Day 2 — Database Connection
-- Created utils/db.py with SQLAlchemy engine and connection helpers
-- Connected to PostgreSQL web_analytics database using python-dotenv
+## Day 2 - Database Connection
+- Created utils/db.py with SQLAlchemy connection helper
+- Connected to PostgreSQL web_analytics database
 - Tested connection successfully
 
-## Day 1 — Project Scaffold
-- Created complete folder structure (dashboard, ingestion, mock_data, sql, utils)
+## Day 1 - Project Scaffold
+- Created complete folder structure
 - Set up .env.example with all required environment variables
-- Added .gitignore covering Python, venv, __pycache__, data files
-- Created README skeleton with all sections
+- Added .gitignore and README skeleton
