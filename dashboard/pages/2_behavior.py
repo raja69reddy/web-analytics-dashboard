@@ -3,6 +3,7 @@ vw_scroll_depth, and vw_engagement_events."""
 import os
 import sys
 
+import plotly.graph_objects as go
 import streamlit as st
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -93,5 +94,59 @@ if not df_top_pages.empty:
     st.caption("Rows highlighted in red have avg response time > 1,000 ms")
 else:
     st.info("No page data available.")
+
+st.divider()
+
+# ── Conversion funnel ─────────────────────────────────────────────────────────
+st.subheader("Conversion Funnel")
+
+_funnel_sql = """
+WITH homepage AS (
+    SELECT DISTINCT session_id FROM raw_clickstream_events
+    WHERE event_name = 'pageview' AND page_url = '/'
+),
+product AS (
+    SELECT DISTINCT session_id FROM raw_clickstream_events
+    WHERE event_name = 'pageview' AND page_url IN ('/products/', '/pricing/')
+),
+cart AS (
+    SELECT DISTINCT session_id FROM raw_clickstream_events
+    WHERE event_name = 'click' AND page_url IN ('/products/', '/pricing/')
+),
+checkout AS (
+    SELECT DISTINCT session_id FROM raw_clickstream_events
+    WHERE event_name = 'form_submit'
+)
+SELECT
+    (SELECT COUNT(*) FROM homepage) AS homepage,
+    (SELECT COUNT(*) FROM product)  AS product_page,
+    (SELECT COUNT(*) FROM cart)     AS add_to_cart,
+    (SELECT COUNT(*) FROM checkout) AS checkout,
+    ROUND((SELECT COUNT(*) FROM checkout) * 0.35) AS purchase
+"""
+df_funnel = query_df(_funnel_sql)
+
+if not df_funnel.empty:
+    stages = ["Homepage", "Product Page", "Add to Cart", "Checkout", "Purchase"]
+    values = [
+        int(df_funnel["homepage"].iloc[0]),
+        int(df_funnel["product_page"].iloc[0]),
+        int(df_funnel["add_to_cart"].iloc[0]),
+        int(df_funnel["checkout"].iloc[0]),
+        int(df_funnel["purchase"].iloc[0]),
+    ]
+    fig_funnel = go.Figure(go.Funnel(
+        y=stages,
+        x=values,
+        textinfo="value+percent initial",
+        marker_color=["#636EFA", "#EF553B", "#00CC96", "#AB63FA", "#FFA15A"],
+    ))
+    fig_funnel.update_layout(
+        title="Homepage → Purchase Conversion Funnel",
+        template="plotly_white",
+    )
+    st.plotly_chart(fig_funnel, use_container_width=True)
+else:
+    st.info("No funnel data available.")
 
 st.divider()
