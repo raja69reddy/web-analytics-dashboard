@@ -2,6 +2,11 @@
 -- Web Analytics Schema
 -- All tables use CREATE TABLE IF NOT EXISTS so this file is
 -- safe to re-run after the initial setup without errors.
+--
+-- Layers:
+--   RAW       : raw_ga4_sessions, raw_server_logs, raw_scrape_pages, raw_clickstream_events
+--   DIMENSION : dim_pages, dim_dates
+--   FACT      : fct_sessions, fct_events
 -- ============================================================
 
 
