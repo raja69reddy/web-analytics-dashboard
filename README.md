@@ -29,12 +29,6 @@ A solo-use, full-stack web analytics project built with PostgreSQL + Python + St
 - Filled dim_dates table with dates from 2023 to 2025
 - Verified all rows inserted successfully into PostgreSQL
 
-✅ **Day 6 — GA4 Mock Data Generator**
-- Created mock_data/gen_ga4.py
-- Generated 1,000 rows of realistic GA4 session data
-- Fields: date, source, medium, channel, sessions, users, pageviews, bounce rate
-- Saved to data/raw/ga4_sessions.csv
-
 ## Stack
 
 | Layer | Tool |
