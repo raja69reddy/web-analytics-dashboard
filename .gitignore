@@ -14,7 +14,9 @@ build/
 
 # Data files
 data/raw/*
+!data/raw/.gitkeep
 data/mock/*
+!data/mock/.gitkeep
 *.csv
 *.parquet
 
