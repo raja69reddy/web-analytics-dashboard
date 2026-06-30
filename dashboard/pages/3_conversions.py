@@ -60,3 +60,62 @@ display_kpi_row([
 ])
 
 st.divider()
+
+# ── CVR over time ──────────────────────────────────────────────────────────────
+st.subheader("Conversion Rate Over Time")
+CVR_TARGET = 3.5  # target CVR % for reference line
+
+if not df_conv.empty:
+    daily_cvr = (
+        df_conv.groupby("session_date")
+        .apply(lambda g: pd.Series({
+            "sessions":        g["sessions"].sum(),
+            "goal_completions": g["goal_completions"].sum(),
+        }))
+        .reset_index()
+    )
+    daily_cvr["cvr_pct"] = (
+        daily_cvr["goal_completions"] / daily_cvr["sessions"].replace(0, None) * 100
+    ).round(4)
+    daily_cvr = daily_cvr.sort_values("session_date")
+    daily_cvr["cvr_7day_avg"] = (
+        daily_cvr["cvr_pct"]
+        .rolling(7, min_periods=1)
+        .mean()
+        .round(4)
+    )
+
+    fig_cvr = go.Figure()
+    # Color bars green/red depending on target
+    colors = [
+        "#2ca02c" if v >= CVR_TARGET else "#d62728"
+        for v in daily_cvr["cvr_pct"].fillna(0)
+    ]
+    fig_cvr.add_trace(go.Bar(
+        x=daily_cvr["session_date"],
+        y=daily_cvr["cvr_pct"],
+        name="Daily CVR",
+        marker_color=colors,
+        opacity=0.6,
+    ))
+    fig_cvr.add_trace(go.Scatter(
+        x=daily_cvr["session_date"],
+        y=daily_cvr["cvr_7day_avg"],
+        name="7-Day Avg",
+        line={"color": "#1f77b4", "width": 2},
+    ))
+    fig_cvr.add_hline(
+        y=CVR_TARGET, line_dash="dash", line_color="orange",
+        annotation_text=f"Target {CVR_TARGET}%",
+        annotation_position="bottom right",
+    )
+    fig_cvr.update_layout(
+        title="Conversion Rate % — Daily with 7-Day Rolling Average",
+        xaxis_title="Date", yaxis_title="CVR (%)",
+        template="plotly_white", legend=dict(orientation="h"),
+    )
+    st.plotly_chart(fig_cvr, use_container_width=True)
+else:
+    st.info("No conversion data available for the selected filters.")
+
+st.divider()
