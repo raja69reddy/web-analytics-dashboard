@@ -1,5 +1,20 @@
 # Changelog
 
+## Day 16 - Traffic & Sessions Dashboard Page
+- Updated dashboard/pages/1_traffic.py with real PostgreSQL data from all 6 traffic views
+- Added debug data shapes expander showing row counts for each view
+- Added 5 KPI cards (sessions, users, pageviews, bounce rate, duration) with % change vs previous period
+- Added sessions over time line chart with dashed 7-day rolling average overlay
+- Added traffic by channel: horizontal bar chart (sorted descending) + donut pie side by side
+- Added new vs returning users stacked bar chart over time
+- Added device breakdown: sessions pie + bounce rate bar chart in two columns
+- Added geographic performance: top countries table + horizontal bar chart
+- Added raw data table with sortable columns, CSV download button, and last updated timestamp
+- Added @st.cache_data(ttl=300) wrappers on all 6 view loaders
+- Added cache clear button and TTL notice in sidebar
+- Added st.spinner while loading data from PostgreSQL
+- Added try/except with friendly error message and st.stop on DB failure
+
 ## Day 15 - Mock Data Enhanced + Dashboard Started
 - Updated gen_clickstream.py with 10,000 rows and new columns (session_duration, device_type, browser, referrer_url)
 - Updated gen_scrape.py with 100 rows and new columns (page_type, load_time_ms, internal_links, external_links)
