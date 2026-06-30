@@ -67,6 +67,14 @@ A solo-use, full-stack web analytics project built with PostgreSQL + Python + St
 - Loaded 2,000 rows into raw_server_logs table
 - All unit tests passing with pytest
 
+✅ **Day 10 — Log Parser + Enhanced Mock Data**
+- Updated gen_server_logs.py — now generates 5,000 rows
+- Created utils/log_parser.py with 5 parsing functions
+- Updated server_logs.py to use log_parser functions
+- Added server_log_analysis.sql with 4 analysis queries
+- Updated GA4 mock data with device and country columns
+- All unit tests passing with pytest
+
 ## Project Architecture
 
 ```
