@@ -93,14 +93,64 @@ def load(df: pd.DataFrame, mode: str = "full") -> None:
     print(f"Loaded {len(df):,} rows into raw_ga4_sessions ({mode} mode).")
 
 
+CSV_CHANNELS = [
+    ("Organic Search",  "google",      "organic"),
+    ("Direct",          "direct",      "(none)"),
+    ("Referral",        "facebook",    "referral"),
+    ("Social",          "twitter",     "social"),
+    ("Email",           "newsletter",  "email"),
+    ("Paid Search",     "bing",        "cpc"),
+]
+
+
+def generate_csv(n: int = 1000, days: int = 90) -> pd.DataFrame:
+    """Generate n aggregated GA4 rows with simplified columns for CSV export."""
+    end = date.today()
+    start = end - timedelta(days=days - 1)
+    rows = []
+    for _ in range(n):
+        d = start + timedelta(days=random.randint(0, days - 1))
+        channel, source, medium = random.choice(CSV_CHANNELS)
+        sessions = random.randint(1, 50)
+        users = random.randint(1, sessions)
+        rows.append({
+            "session_date":          d,
+            "source":                source,
+            "medium":                medium,
+            "channel":               channel,
+            "sessions":              sessions,
+            "users":                 users,
+            "new_users":             random.randint(0, users),
+            "pageviews":             sessions * random.randint(1, 8),
+            "bounce_rate":           round(random.uniform(0.2, 0.8), 4),
+            "avg_session_duration":  round(random.uniform(30, 600), 2),
+        })
+    return pd.DataFrame(rows).sort_values("session_date").reset_index(drop=True)
+
+
+def save_csv(df: pd.DataFrame, path: str) -> None:
+    """Save DataFrame to CSV, creating parent directories if needed."""
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    df.to_csv(path, index=False)
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", choices=["full", "incremental"], default="full")
+    parser.add_argument("--mode", choices=["full", "incremental", "csv"], default="csv")
     parser.add_argument("--days", type=int, default=90)
     parser.add_argument("--sessions-per-day", type=int, default=200)
+    parser.add_argument("--rows", type=int, default=1000)
     args = parser.parse_args()
-    df = generate(days=args.days, sessions_per_day=args.sessions_per_day)
-    load(df, mode=args.mode)
+
+    if args.mode == "csv":
+        df = generate_csv(n=args.rows, days=args.days)
+        out = os.path.join(os.path.dirname(__file__), "..", "data", "raw", "ga4_sessions.csv")
+        out = os.path.normpath(out)
+        save_csv(df, out)
+        print(f"Generated {len(df)} rows of GA4 data saved to data/raw/ga4_sessions.csv")
+    else:
+        df = generate(days=args.days, sessions_per_day=args.sessions_per_day)
+        load(df, mode=args.mode)
 
 
 if __name__ == "__main__":
