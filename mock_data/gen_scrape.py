@@ -27,7 +27,19 @@ BASE_PAGES = [
 ]
 
 
-def generate_csv(n: int = 50) -> pd.DataFrame:
+PAGE_TYPES = ["blog", "product", "landing", "about", "contact"]
+PAGE_TYPE_MAP = {
+    "/": "landing", "/about": "about", "/about/": "about",
+    "/contact": "contact", "/contact/": "contact",
+    "/pricing": "landing", "/pricing/": "landing",
+    "/products": "product", "/products/": "product",
+    "/faq": "landing", "/careers": "about",
+    "/blog": "blog", "/blog/": "blog",
+    "/terms": "about", "/privacy": "about",
+}
+
+
+def generate_csv(n: int = 100) -> pd.DataFrame:
     """Generate n simplified scraped-page rows for CSV export."""
     now = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     rows = []
@@ -38,12 +50,18 @@ def generate_csv(n: int = 50) -> pd.DataFrame:
             slug = fake.slug()
             url = f"https://example.com/blog/{slug}"
             title = " ".join(fake.words(nb=5)).title()
+        path = url.replace("https://example.com", "")
+        page_type = PAGE_TYPE_MAP.get(path, "blog" if "/blog/" in path else "landing")
         rows.append({
             "url":              url,
             "title":            title,
             "meta_description": fake.sentence(nb_words=20)[:160],
             "word_count":       random.randint(300, 3000),
             "scraped_at":       now,
+            "page_type":        page_type,
+            "load_time_ms":     random.randint(200, 3000),
+            "internal_links":   random.randint(2, 25),
+            "external_links":   random.randint(0, 10),
         })
     return pd.DataFrame(rows)
 
@@ -97,7 +115,7 @@ def load(df: pd.DataFrame, mode: str = "full") -> None:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=["csv", "full", "incremental"], default="csv")
-    parser.add_argument("--rows", type=int, default=50)
+    parser.add_argument("--rows", type=int, default=100)
     args = parser.parse_args()
 
     if args.mode == "csv":
