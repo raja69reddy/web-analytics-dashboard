@@ -217,3 +217,45 @@ else:
     st.info("No funnel data available.")
 
 st.divider()
+
+# ── Conversion funnel visualization ───────────────────────────────────────────
+st.subheader("Conversion Funnel")
+if not df_funnel.empty:
+    df_f = df_funnel.copy()
+    df_f["label"] = (
+        df_f["stage_name"]
+        + "<br>"
+        + df_f["users_reached"].apply(lambda v: f"{int(v):,}")
+        + " ("
+        + df_f["completion_rate_pct"].apply(lambda v: f"{v:.1f}%")
+        + ")"
+    )
+
+    # Identify the stage with the biggest drop-off (excluding last stage)
+    max_drop_idx = int(df_f.iloc[:-1]["drop_off_count"].idxmax())
+
+    colors = []
+    for i, row in df_f.iterrows():
+        if i == max_drop_idx:
+            colors.append("#d62728")   # red = biggest drop-off stage
+        else:
+            colors.append("#636EFA")
+
+    fig_funnel = go.Figure(go.Funnel(
+        y=df_f["stage_name"].tolist(),
+        x=df_f["users_reached"].tolist(),
+        text=df_f["label"].tolist(),
+        textinfo="text",
+        marker={"color": colors},
+        connector={"line": {"color": "rgba(100,100,100,0.3)", "width": 2}},
+    ))
+    biggest_stage = df_f.loc[max_drop_idx, "stage_name"]
+    fig_funnel.update_layout(
+        title=f"Funnel — Biggest drop-off at: {biggest_stage}",
+        template="plotly_white",
+    )
+    st.plotly_chart(fig_funnel, use_container_width=True)
+else:
+    st.info("No funnel data available.")
+
+st.divider()
