@@ -258,3 +258,67 @@ with st.spinner("Loading load time data..."):
         st.error(f"Could not render load time chart: {exc}")
 
 st.divider()
+
+# ── Internal vs external links analysis ──────────────────────────────────────
+st.subheader("Internal & External Links Analysis")
+
+@st.cache_data(ttl=300)
+def _load_links():
+    return query_df(
+        "SELECT DISTINCT ON (url) url, internal_links, external_links "
+        "FROM raw_scrape_pages WHERE http_status = 200 ORDER BY url, scraped_at DESC"
+    )
+
+with st.spinner("Loading links data..."):
+    try:
+        import plotly.express as px
+
+        _links_df = _load_links()
+        if _links_df.empty:
+            st.info("No links data available.")
+        else:
+            col_a, col_b = st.columns(2)
+
+            # Avg internal vs external links bar
+            _avg_int = round(float(_links_df["internal_links"].mean()), 1)
+            _avg_ext = round(float(_links_df["external_links"].mean()), 1)
+            fig_avg = px.bar(
+                x=["Avg Internal Links", "Avg External Links"],
+                y=[_avg_int, _avg_ext],
+                color=["Avg Internal Links", "Avg External Links"],
+                color_discrete_map={"Avg Internal Links": "#007bff", "Avg External Links": "#fd7e14"},
+                title="Average Links per Page",
+                labels={"x": "Link Type", "y": "Average Count"},
+            )
+            fig_avg.update_layout(showlegend=False, height=350)
+            col_a.plotly_chart(fig_avg, use_container_width=True)
+
+            # Orphan pages (zero internal links)
+            _orphans = _links_df[_links_df["internal_links"] == 0]
+            col_a.metric("Orphan Pages (0 internal links)", len(_orphans))
+            if not _orphans.empty:
+                with col_a.expander(f"View {len(_orphans)} orphan page(s)"):
+                    st.dataframe(_orphans[["url", "internal_links", "external_links"]],
+                                 hide_index=True)
+
+            # Pages with many external links (>10)
+            _heavy_ext = _links_df[_links_df["external_links"] > 10]
+            fig_ext = px.histogram(
+                _links_df, x="external_links", nbins=15,
+                title="Distribution of External Links per Page",
+                labels={"external_links": "External Links", "count": "Pages"},
+                color_discrete_sequence=["#fd7e14"],
+            )
+            fig_ext.update_layout(height=350)
+            col_b.plotly_chart(fig_ext, use_container_width=True)
+            col_b.metric("Pages with >10 External Links", len(_heavy_ext))
+            if not _heavy_ext.empty:
+                with col_b.expander(f"View {len(_heavy_ext)} page(s) with many external links"):
+                    st.dataframe(
+                        _heavy_ext[["url", "internal_links", "external_links"]].sort_values(
+                            "external_links", ascending=False
+                        ),
+                        hide_index=True,
+                    )
+    except Exception as exc:
+        st.error(f"Could not load links analysis: {exc}")
