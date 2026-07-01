@@ -55,3 +55,39 @@ with st.spinner("Loading KPIs..."):
         st.error(f"Could not load KPIs: {exc}")
 
 st.divider()
+
+# ── Top organic landing pages ─────────────────────────────────────────────────
+st.subheader("Top Organic Landing Pages")
+
+@st.cache_data(ttl=300)
+def _load_organic_pages(page_filter: str):
+    sql = (
+        "SELECT url, title, word_count, organic_sessions, organic_pageviews, "
+        "avg_session_duration_s, "
+        "ROUND(organic_bounces::NUMERIC / NULLIF(organic_sessions, 0) * 100, 2) AS bounce_rate_pct "
+        "FROM vw_seo "
+        "WHERE organic_sessions > 0 "
+        + (f"AND url ILIKE '%{page_filter}%' " if page_filter else "")
+        + "ORDER BY organic_sessions DESC LIMIT 20"
+    )
+    return query_df(sql)
+
+_search = st.text_input("Search pages", value=page_search, placeholder="/blog/")
+
+with st.spinner("Loading organic pages..."):
+    try:
+        _pages_df = _load_organic_pages(_search)
+        if _pages_df.empty:
+            st.info("No organic landing pages found with the current filter.")
+        else:
+            def _highlight_top3(row):
+                color = "background-color: #d4edda" if row.name < 3 else ""
+                return [color] * len(row)
+
+            styled = _pages_df.style.apply(_highlight_top3, axis=1)
+            st.dataframe(styled, use_container_width=True, hide_index=True)
+            st.caption(f"Showing {len(_pages_df)} pages | Top 3 highlighted in green")
+    except Exception as exc:
+        st.error(f"Could not load organic pages: {exc}")
+
+st.divider()
