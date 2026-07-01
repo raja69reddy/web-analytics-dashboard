@@ -1,5 +1,15 @@
 # Changelog
 
+## Day 22 - Conversion SQL Queries + SEO Dashboard Page
+- Created 4 conversion SQL queries
+- Created dashboard/pages/4_seo.py SEO page
+- Added organic landing pages table
+- Added word count vs engagement scatter plot
+- Added content health table with scoring
+- Added page load time distribution chart
+- Added links analysis section
+- All tests passing
+
 ## Day 21 - AI Report Generation + End-to-End Test
 - Full pipeline test successful end to end
 - All SQL views verified returning correct data
