@@ -201,3 +201,60 @@ with st.spinner("Loading content health..."):
         st.error(f"Could not load content health: {exc}")
 
 st.divider()
+
+# ── Page load time distribution ───────────────────────────────────────────────
+st.subheader("Page Load Time Distribution")
+
+@st.cache_data(ttl=300)
+def _load_times():
+    return query_df(
+        "SELECT load_time_ms FROM raw_scrape_pages WHERE http_status = 200 AND load_time_ms IS NOT NULL"
+    )
+
+with st.spinner("Loading load time data..."):
+    try:
+        import plotly.graph_objects as go
+
+        _lt_df = _load_times()
+        if _lt_df.empty:
+            st.info("No load time data available.")
+        else:
+            def _bucket(ms):
+                if ms <= 500:
+                    return "Fast (≤500ms)"
+                if ms <= 1000:
+                    return "OK (501–1000ms)"
+                if ms <= 2000:
+                    return "Slow (1001–2000ms)"
+                return "Very Slow (>2000ms)"
+
+            _lt_df["bucket"] = _lt_df["load_time_ms"].apply(_bucket)
+            _bucket_order = ["Fast (≤500ms)", "OK (501–1000ms)", "Slow (1001–2000ms)", "Very Slow (>2000ms)"]
+            _bucket_colors = {"Fast (≤500ms)": "#28a745", "OK (501–1000ms)": "#ffc107",
+                              "Slow (1001–2000ms)": "#fd7e14", "Very Slow (>2000ms)": "#dc3545"}
+            _counts = _lt_df["bucket"].value_counts().reindex(_bucket_order, fill_value=0)
+
+            fig_load = go.Figure(go.Bar(
+                x=_counts.index.tolist(),
+                y=_counts.values.tolist(),
+                marker_color=[_bucket_colors[b] for b in _counts.index],
+            ))
+            fig_load.update_layout(
+                title="Page Load Time Distribution",
+                xaxis_title="Load Time Bucket",
+                yaxis_title="Number of Pages",
+                height=400,
+                showlegend=False,
+            )
+            # Reference lines at 1000ms and 2000ms
+            fig_load.add_vline(x=1.5, line_dash="dash", line_color="orange",
+                               annotation_text="1000ms (good threshold)")
+            fig_load.add_vline(x=2.5, line_dash="dash", line_color="red",
+                               annotation_text="2000ms (poor threshold)")
+            st.plotly_chart(fig_load, use_container_width=True)
+            st.caption(f"Total pages: {len(_lt_df)} | Avg: {int(_lt_df['load_time_ms'].mean())}ms | "
+                       f"Max: {int(_lt_df['load_time_ms'].max())}ms")
+    except Exception as exc:
+        st.error(f"Could not render load time chart: {exc}")
+
+st.divider()
