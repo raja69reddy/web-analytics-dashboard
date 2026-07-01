@@ -141,3 +141,63 @@ with st.spinner("Loading organic pages..."):
         st.error(f"Could not load organic pages: {exc}")
 
 st.divider()
+
+# ── Content health table ──────────────────────────────────────────────────────
+st.subheader("Content Health")
+
+@st.cache_data(ttl=300)
+def _load_health():
+    return query_df(
+        "SELECT DISTINCT ON (url) url, title, meta_description, word_count, "
+        "load_time_ms, internal_links, external_links, http_status "
+        "FROM raw_scrape_pages ORDER BY url, scraped_at DESC"
+    )
+
+def _health_score(row) -> str:
+    issues = []
+    if not row.get("meta_description"):
+        issues.append("missing meta")
+    if (row.get("word_count") or 0) < 300:
+        issues.append("low word count")
+    if (row.get("load_time_ms") or 0) > 2000:
+        issues.append("slow load")
+    if not issues:
+        return "healthy"
+    if len(issues) >= 2:
+        return "issues"
+    return "needs work"
+
+with st.spinner("Loading content health..."):
+    try:
+        _health_df = _load_health()
+        if _health_df.empty:
+            st.info("No scrape data available. Run gen_scrape.py --mode full to populate.")
+        else:
+            _health_df["health"] = _health_df.apply(_health_score, axis=1)
+
+            def _color_health(row):
+                c = {"healthy": "#d4edda", "needs work": "#fff3cd", "issues": "#f8d7da"}
+                bg = c.get(row["health"], "")
+                return [f"background-color: {bg}"] * len(row)
+
+            styled = _health_df.style.apply(_color_health, axis=1)
+            st.dataframe(styled, use_container_width=True, hide_index=True)
+
+            csv_bytes = _health_df.to_csv(index=False).encode("utf-8")
+            st.download_button(
+                "Download Content Health as CSV",
+                data=csv_bytes,
+                file_name="content_health.csv",
+                mime="text/csv",
+            )
+            healthy = (_health_df["health"] == "healthy").sum()
+            needs_work = (_health_df["health"] == "needs work").sum()
+            issues = (_health_df["health"] == "issues").sum()
+            st.caption(
+                f"Healthy: {healthy} | Needs work: {needs_work} | Issues: {issues} "
+                f"(green = healthy, yellow = needs work, red = issues)"
+            )
+    except Exception as exc:
+        st.error(f"Could not load content health: {exc}")
+
+st.divider()
