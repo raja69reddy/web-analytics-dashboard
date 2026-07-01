@@ -21,6 +21,16 @@ with st.sidebar:
 start_str = start_date.isoformat()
 end_str   = end_date.isoformat()
 
+# ── DB connectivity guard ─────────────────────────────────────────────────────
+try:
+    _check = query_df("SELECT 1 AS ok")
+except Exception as _db_exc:
+    st.error(
+        "**Database connection failed.** Check that PostgreSQL is running and your `.env` credentials are correct.\n\n"
+        f"Error: `{_db_exc}`"
+    )
+    st.stop()
+
 # ── KPI cards ─────────────────────────────────────────────────────────────────
 
 @st.cache_data(ttl=300)
